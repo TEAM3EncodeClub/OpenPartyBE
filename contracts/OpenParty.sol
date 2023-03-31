@@ -20,16 +20,15 @@ contract OpenParty is Ownable {
     /// @notice Charged % fee for minting a song ETH paid
     uint256 public songFee;
 
+    /// @notice Constructor function
+    /// @param _purchaseRatio Amount of tokens given per ETH paid
+    /// @param _songFee Amount of tokens required for placing a bet that goes for the prize pool
     constructor(
-        string memory votesName,
-        string memory votesSymbol,
-        string memory songsName,
-        string memory songsSymbol,
         uint256 _purchaseRatio,
         uint256 _songFee
     ) {
-        votesToken = new OPVotes(votesName, votesSymbol);
-        songsToken = new OPSongs(songsName, songsSymbol);
+        votesToken = new OPVotes();
+        songsToken = new OPSongs();
         purchaseRatio = _purchaseRatio;
         songFee = 1 ether * _songFee / 100;
     }
