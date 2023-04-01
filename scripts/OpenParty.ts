@@ -49,7 +49,7 @@ async function mainMenu(rl: readline.Interface) {
 
 function menuOptions(rl: readline.Interface) {
   rl.question(
-    "Select operation: \n Options: \n [0]: Exit \n [1]: Check state \n [2]: Open bets \n [3]: Top up account tokens \n [4]: Bet with account \n [5]: Close bets \n [6]: Check player prize \n [7]: Withdraw \n [8]: Burn tokens \n",
+    "Select operation: \n Options: \n [0]: Exit \n [1]: Display Wallet Balances \n [2]: Buy Vote Tokens \n [3]: Mint A Song \n Option:",
     async (answer: string) => {
       console.log(`Selected: ${answer}\n`);
       const option = Number(answer);
@@ -57,10 +57,14 @@ function menuOptions(rl: readline.Interface) {
         case 0:
           rl.close();
           return;
-//        case 1:
-//          await checkState();
-//          mainMenu(rl);
-//          break;
+        case 1:
+          rl.question("What account (index) to use?\n", async (index) => {
+            await displayBalance(index);
+            await displayVotesBalance(index);
+            await displaySongsBalance(index);
+            mainMenu(rl);
+          });
+          break;
 //        case 2:
 //          rl.question("Input duration (in seconds)\n", async (duration) => {
 //            try {
@@ -171,6 +175,55 @@ function menuOptions(rl: readline.Interface) {
   );
 }
 
+// Display Balance in ethereum
+async function displayBalance(index: string) {
+  const balanceBN = await ethers.provider.getBalance(
+    accounts[Number(index)].address
+  );
+  const balance = ethers.utils.formatEther(balanceBN);
+  console.log(
+    `The account of address ${
+      accounts[Number(index)].address
+    } has ${balance} ETH\n`
+  );
+}
+
+// Display Votes token Balance
+async function displayVotesBalance(index: string) {
+  const balanceBN = await votesToken.balanceOf(accounts[Number(index)].address);
+  const balance = ethers.utils.formatEther(balanceBN);
+  console.log(
+    `The account of address ${
+      accounts[Number(index)].address
+    } has ${balance} OPV\n`
+  );
+}
+
+// Display Songs token Balance
+// TODO Fix ISSUE
+async function displaySongsBalance(index: string) {
+  const balanceBN = await songsToken.balanceOf(accounts[Number(index)].address);
+  const balance: number = +ethers.utils.formatEther(balanceBN);
+  console.log(typeof balance)
+  if(balance >= 0){
+    console.log(
+      `The account of address ${
+        accounts[Number(index)].address
+      } has ${balance} OPS\n`
+    );
+    for(let i = 0; i <= balance; i++){
+      const tokenIndex = await songsToken.tokenOfOwnerByIndex(accounts[Number(index)].address, i);
+      const tokenURI = await songsToken.tokenURI(tokenIndex);
+      console.log(
+        `The token Index ${
+          tokenIndex
+        } has the URI ${tokenURI} \n`
+      );
+    }
+  } else {
+    console.log("Your wallet does not own any songs")
+  }
+}
 //async function checkState() {
 //  const state = await contract.betsOpen();
 //  console.log(`The lottery is ${state ? "open" : "closed"}\n`);
@@ -194,18 +247,7 @@ function menuOptions(rl: readline.Interface) {
 //  console.log(`Bets opened (${receipt.transactionHash})`);
 //}
 //
-//async function displayBalance(index: string) {
-//  const balanceBN = await ethers.provider.getBalance(
-//    accounts[Number(index)].address
-//  );
-//  const balance = ethers.utils.formatEther(balanceBN);
-//  console.log(
-//    `The account of address ${
-//      accounts[Number(index)].address
-//    } has ${balance} ETH\n`
-//  );
-//}
-//
+
 //async function buyTokens(index: string, amount: string) {
 //  const tx = await contract.connect(accounts[Number(index)]).purchaseTokens({
 //    value: ethers.utils.parseEther(amount).div(TOKEN_RATIO),
@@ -214,15 +256,6 @@ function menuOptions(rl: readline.Interface) {
 //  console.log(`Tokens bought (${receipt.transactionHash})\n`);
 //}
 //
-//async function displayTokenBalance(index: string) {
-//  const balanceBN = await token.balanceOf(accounts[Number(index)].address);
-//  const balance = ethers.utils.formatEther(balanceBN);
-//  console.log(
-//    `The account of address ${
-//      accounts[Number(index)].address
-//    } has ${balance} LT0\n`
-//  );
-//}
 //
 //async function bet(index: string, amount: string) {
 //  const allowTx = await token
