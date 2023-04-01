@@ -30,6 +30,7 @@ contract OpenParty is Ownable {
         votesToken = new OPVotes();
         songsToken = new OPSongs();
         purchaseRatio = _purchaseRatio;
+        // sets a ratio in % based on ether price
         songFee = 1 ether * _songFee / 100;
     }
 
@@ -39,13 +40,14 @@ contract OpenParty is Ownable {
         votesToken.mint(msg.sender, msg.value * purchaseRatio);
     }
 
-    /// @notice Mints Song tokens based charging a fee to avoid Spam
+    /// @notice Mints Song tokens based charging a fee in voteTokens to avoid Spam
     /// @param _uri must be a IPFS metadata hash (usualy a json file)
     /// @dev reference https://docs.opensea.io/docs/metadata-standards#metadata-structure
     /// @dev This implementation is prone to rounding problems
-    function mintSong(string memory _uri)
-    external payable {
-        require(msg.value >= songFee);
+    function mintSong(string memory _uri) external {
+        require(votesToken.transferFrom(
+            msg.sender, address(this), songFee
+        ));
         songsToken.safeMint(msg.sender, _uri);
     }
 
@@ -60,5 +62,12 @@ contract OpenParty is Ownable {
     /// @dev future version might require a verification process approved by a DAO
     function burnSong(uint256 _tokenId) external onlyOwner {
         songsToken.burn(_tokenId);
+    }
+
+    /// @notice in case of volatility update the songFee
+    /// @param _songFee is the % of the 1 ether requested in voteTokens
+    /// @dev future version might require a verification process approved by a DAO
+    function setNewSongFee(uint256 _songFee) external onlyOwner {
+        songFee = 1 ether * _songFee / 100;
     }
 }
