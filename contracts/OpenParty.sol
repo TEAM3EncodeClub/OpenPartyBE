@@ -39,6 +39,17 @@ contract OpenParty is Ownable {
     function purchaseVotes() external payable {
         votesToken.mint(msg.sender, msg.value * purchaseRatio);
     }
+    /// The above implementation seems to have the user set an ETH amount to be
+    /// converted to tokens. I think the user experience should be to ask for
+    /// a specified amount of tokens, and then charged the corresponding amount
+    /// of ETH. With the code below, we could set the msg.value in the script.
+    /// Perhaps 1 token should be about $1 USD. Currently $1 == 0.00055 ETH. 
+    /// So, if the user inputs a request for 10 tokens, the script will calculate 
+    /// the msg.value as 10 * 0.00055. For future versions when we have a liquidity pool,
+    /// this ratio will be dynamic, but for v.1, we hardcode the conversion rate.
+    function purchaseVotes(uint256 amount) external payable {
+        votesToken.mint(msg.sender, amount);
+    }
 
     /// @notice Mints Song tokens based charging a fee to avoid Spam
     /// @param _uri must be a IPFS metadata hash (usualy a json file)
