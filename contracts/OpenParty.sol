@@ -48,6 +48,7 @@ contract OpenParty is Ownable {
     /// the msg.value as 10 * 0.00055. For future versions when we have a liquidity pool,
     /// this ratio will be dynamic, but for v.1, we hardcode the conversion rate.
     function purchaseVotes(uint256 amount) external payable {
+        require(msg.value == amount * 0.00055 ether, "insufficient ETH for requested amount of vote tokens.");
         votesToken.mint(msg.sender, amount);
     }
 
@@ -64,7 +65,7 @@ contract OpenParty is Ownable {
     /// @notice Burns `amount` vote tokens and give the equivalent ETH back to user
     function returnVotes(uint256 _amount) external {
         votesToken.burnFrom(msg.sender, _amount);
-        payable(msg.sender).transfer(_amount / purchaseRatio);
+        payable(msg.sender).transfer(_amount * 0.00055 ether);
     }
 
     /// @notice Burns a song token Usually if there are copyright Issues
