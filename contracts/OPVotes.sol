@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 contract OPVotes is ERC20, AccessControl, ERC20Permit, ERC20Votes, ERC20Burnable {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
-    constructor() ERC20("OPVotes", "OPV") ERC20Permit("OPVotes") {
+    constructor(string memory name, string memory symbol) ERC20(name, symbol) ERC20Permit(name) {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(MINTER_ROLE, msg.sender);
     }
