@@ -50,6 +50,12 @@ async function mainMenu(rl: readline.Interface) {
 function menuOptions(rl: readline.Interface) {
   rl.question(
     "Select operation: \n Options: \n [0]: Exit \n [1]: Display Wallet Balances \n [2]: Buy Vote Tokens \n [3]: Mint A Song \n Option:",
+    // Just in case: IPFS integration of Option 3 - upload songs, put their hashes and premit to some addeses this songs
+    // VoteNextSong: set a blocktimestap when it finishes and count votes, select the winner 
+    // Diplay Song: Request all the SongID (NFT TokenID) and display with their data 
+    // Vote Song: requires the blocktimestamp to be active, requires to record addreses that vote in a mapping with votes and specific songID
+    // Add Winner Song: Queue Winnersongs with timestamps
+    // Play Winner Song: Anyone can play Winner Song when its timestamp reaches the time
     async (answer: string) => {
       console.log(`Selected: ${answer}\n`);
       const option = Number(answer);
@@ -233,6 +239,14 @@ async function displaySongsBalance(index: string) {
 }
 
 async function buyVoteTokens(index: string, amount: string) {
+  const tx = await contract.connect(accounts[Number(index)]).purchaseVotes({
+    value: ethers.utils.parseEther(amount).div(VOTES_TOKEN_RATIO),
+  });
+  const receipt = await tx.wait();
+  console.log(`Tokens bought (${receipt.transactionHash})\n`);
+}
+
+async function mintSong(index: string, amount: string) {
   const tx = await contract.connect(accounts[Number(index)]).purchaseVotes({
     value: ethers.utils.parseEther(amount).div(VOTES_TOKEN_RATIO),
   });
