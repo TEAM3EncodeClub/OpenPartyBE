@@ -65,17 +65,25 @@ function menuOptions(rl: readline.Interface) {
             mainMenu(rl);
           });
           break;
-//        case 2:
-//          rl.question("Input duration (in seconds)\n", async (duration) => {
-//            try {
-//              await openBets(duration);
-//            } catch (error) {
-//              console.log("error\n");
-//              console.log({ error });
-//            }
-//            mainMenu(rl);
-//          });
-//          break;
+        case 2:
+          rl.question("What account (index) to use?\n", async (index) => {
+            await displayBalance(index);
+            await displayVotesBalance(index);
+            await displaySongsBalance(index);
+            rl.question("Buy how many vote tokens?\n", async (amount) => {
+              try {
+                await buyVoteTokens(index, amount);
+                await displayBalance(index);
+                await displayVotesBalance(index);
+                await displaySongsBalance(index);
+              } catch (error) {
+                console.log("error\n");
+                console.log({ error });
+              }
+              mainMenu(rl);
+            });
+          });
+          break;
 //        case 3:
 //          rl.question("What account (index) to use?\n", async (index) => {
 //            await displayBalance(index);
@@ -223,6 +231,15 @@ async function displaySongsBalance(index: string) {
     console.log("Your wallet does not own any songs")
   }
 }
+
+async function buyVoteTokens(index: string, amount: string) {
+  const tx = await contract.connect(accounts[Number(index)]).purchaseVotes({
+    value: ethers.utils.parseEther(amount).div(VOTES_TOKEN_RATIO),
+  });
+  const receipt = await tx.wait();
+  console.log(`Tokens bought (${receipt.transactionHash})\n`);
+}
+
 //async function checkState() {
 //  const state = await contract.betsOpen();
 //  console.log(`The lottery is ${state ? "open" : "closed"}\n`);
@@ -244,15 +261,6 @@ async function displaySongsBalance(index: string) {
 //  const tx = await contract.openBets(currentBlock.timestamp + Number(duration));
 //  const receipt = await tx.wait();
 //  console.log(`Bets opened (${receipt.transactionHash})`);
-//}
-//
-
-//async function buyTokens(index: string, amount: string) {
-//  const tx = await contract.connect(accounts[Number(index)]).purchaseTokens({
-//    value: ethers.utils.parseEther(amount).div(TOKEN_RATIO),
-//  });
-//  const receipt = await tx.wait();
-//  console.log(`Tokens bought (${receipt.transactionHash})\n`);
 //}
 //
 //
