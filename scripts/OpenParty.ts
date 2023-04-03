@@ -200,12 +200,11 @@ async function displayVotesBalance(index: string) {
 }
 
 // Display Songs token Balance
-// TODO Fix ISSUE
 async function displaySongsBalance(index: string) {
   const balanceBN = await songsToken.balanceOf(accounts[Number(index)].address);
+  // gets balance with ether format and makes it a number
   const balance: number = +ethers.utils.formatEther(balanceBN);
-  console.log(typeof balance)
-  if(balance >= 0){
+  if(balance > 0){
     console.log(
       `The account of address ${
         accounts[Number(index)].address
