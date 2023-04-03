@@ -30,8 +30,8 @@ contract OpenParty is Ownable {
         votesToken = new OPVotes();
         songsToken = new OPSongs();
         purchaseRatio = _purchaseRatio;
-        // sets a ratio in % based on ether price
-        songFee = 1 ether * _songFee / 100;
+        // sets a songFee to be paid in vote tokens
+        songFee = _songFee ;
     }
 
     /// @notice Gives votes tokens based on the amount of ETH sent
@@ -68,6 +68,6 @@ contract OpenParty is Ownable {
     /// @param _songFee is the % of the 1 ether requested in voteTokens
     /// @dev future version might require a verification process approved by a DAO
     function setNewSongFee(uint256 _songFee) external onlyOwner {
-        songFee = 1 ether * _songFee / 100;
+        songFee =  _songFee;
     }
 }

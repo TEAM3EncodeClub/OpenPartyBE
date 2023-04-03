@@ -9,7 +9,7 @@ let songsToken: OPSongs;
 let accounts: SignerWithAddress[];
 
 
-const SONG_FEE = 1; // 1 %
+const SONG_FEE = 1000; // 1 %
 const VOTES_TOKEN_RATIO = 1000000;
 
 async function main() {
@@ -26,7 +26,7 @@ async function initContracts() {
   const contractFactory = await ethers.getContractFactory("OpenParty");
   contract = await contractFactory.deploy(
     VOTES_TOKEN_RATIO,
-    ethers.utils.parseEther(SONG_FEE.toFixed(18))
+    SONG_FEE
   );
   await contract.deployed();
   // Attaches Votes Contract
@@ -79,6 +79,25 @@ function menuOptions(rl: readline.Interface) {
             rl.question("Buy how many vote tokens?\n", async (amount) => {
               try {
                 await buyVoteTokens(index, amount);
+                await displayBalance(index);
+                await displayVotesBalance(index);
+                await displaySongsBalance(index);
+              } catch (error) {
+                console.log("error\n");
+                console.log({ error });
+              }
+              mainMenu(rl);
+            });
+          });
+          break;
+        case 3:
+          rl.question("What account (index) to use?\n", async (index) => {
+            await displayBalance(index);
+            await displayVotesBalance(index);
+            await displaySongsBalance(index);
+            rl.question("provide the URI?\n", async (URI) => {
+              try {
+                await mintSong(index, URI);
                 await displayBalance(index);
                 await displayVotesBalance(index);
                 await displaySongsBalance(index);
@@ -246,12 +265,14 @@ async function buyVoteTokens(index: string, amount: string) {
   console.log(`Tokens bought (${receipt.transactionHash})\n`);
 }
 
-async function mintSong(index: string, amount: string) {
-  const tx = await contract.connect(accounts[Number(index)]).purchaseVotes({
-    value: ethers.utils.parseEther(amount).div(VOTES_TOKEN_RATIO),
-  });
+async function mintSong(index: string, URI: string) {
+  const allowTx = await votesToken
+    .connect(accounts[Number(index)])
+    .approve(contract.address, ethers.constants.MaxUint256);
+  await allowTx.wait();
+  const tx = await contract.connect(accounts[Number(index)]).mintSong(URI);
   const receipt = await tx.wait();
-  console.log(`Tokens bought (${receipt.transactionHash})\n`);
+  console.log(`Song Minted at (${receipt.transactionHash})\n`);
 }
 
 //async function checkState() {
