@@ -9,7 +9,7 @@ let songsToken: OPSongs;
 let accounts: SignerWithAddress[];
 
 
-const SONG_FEE = 1000; // 1 %
+const SONG_FEE = 1000 // 1 %
 const VOTES_TOKEN_RATIO = 1000000;
 
 async function main() {
@@ -26,7 +26,7 @@ async function initContracts() {
   const contractFactory = await ethers.getContractFactory("OpenParty");
   contract = await contractFactory.deploy(
     VOTES_TOKEN_RATIO,
-    SONG_FEE
+    ethers.utils.parseEther(SONG_FEE.toFixed(18)) 
   );
   await contract.deployed();
   // Attaches Votes Contract
@@ -234,9 +234,7 @@ async function displayVotesBalance(index: string) {
 
 // Display Songs token Balance
 async function displaySongsBalance(index: string) {
-  //const balanceBN = await songsToken.balanceOf(accounts[Number(index)].address);
   // gets balance with ether format and makes it a number
-  //const balance: number = +ethers.utils.formatEther(balanceBN);
   const balance: number = +await songsToken.balanceOf(accounts[Number(index)].address);
   if(balance > 0){
     console.log(
