@@ -234,17 +234,18 @@ async function displayVotesBalance(index: string) {
 
 // Display Songs token Balance
 async function displaySongsBalance(index: string) {
-  const balanceBN = await songsToken.balanceOf(accounts[Number(index)].address);
+  //const balanceBN = await songsToken.balanceOf(accounts[Number(index)].address);
   // gets balance with ether format and makes it a number
-  const balance: number = +ethers.utils.formatEther(balanceBN);
+  //const balance: number = +ethers.utils.formatEther(balanceBN);
+  const balance: number = +await songsToken.balanceOf(accounts[Number(index)].address);
   if(balance > 0){
     console.log(
       `The account of address ${
         accounts[Number(index)].address
       } has ${balance} OPS\n`
     );
-    for(let i = 0; i <= balance; i++){
-      const tokenIndex = await songsToken.tokenOfOwnerByIndex(accounts[Number(index)].address, i);
+    for(let i = 1; i <= balance; i++){
+      const tokenIndex = await songsToken.tokenOfOwnerByIndex(accounts[Number(index)].address, (i - 1));
       const tokenURI = await songsToken.tokenURI(tokenIndex);
       console.log(
         `The token Index ${
