@@ -61,5 +61,9 @@ contract OPSongs is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Burnable, 
     {
         return super.supportsInterface(interfaceId);
     }
+    
+    function checkSongExists(uint256 tokenId) public view returns (bool) {
+        return _exists(tokenId);
+    }
 }
 
