@@ -68,7 +68,7 @@ async function mainMenu(rl: readline.Interface) {
 
 function menuOptions(rl: readline.Interface) {
   rl.question(
-    "Select operation: \n Options: \n [0]: Exit \n [1]: PrintMenu  \n [2]: Display Wallet Balances \n [3]: Buy Vote Tokens \n [4]: Mint A Song \n Option:",
+    "Select operation: \n Options: \n [0]: Exit \n [1]: PrintMenu  \n [2]: Display Wallet Balances \n [3]: Buy Vote Tokens \n [4]: Mint A Song \n [5]: OpenVoting \n [6]: CloseVoting \n [7]: Check Voting Power \n [8]: Vote For Song \n [9]: Get Winning Song \n [10]: Change Song Fee \n Option:",
     // Just in case: IPFS integration of Option 3 - upload songs, put their hashes and premit to some addeses this songs
     // VoteNextSong: set a blocktimestap when it finishes and count votes, select the winner 
     // Diplay Song: Request all the SongID (NFT TokenID) and display with their data 
@@ -131,98 +131,39 @@ function menuOptions(rl: readline.Interface) {
             });
           });
           break;
-//        case 3:
-//          rl.question("What account (index) to use?\n", async (index) => {
-//            await displayBalance(index);
-//            rl.question("Buy how many tokens?\n", async (amount) => {
-//              try {
-//                await buyTokens(index, amount);
-//                await displayBalance(index);
-//                await displayTokenBalance(index);
-//              } catch (error) {
-//                console.log("error\n");
-//                console.log({ error });
-//              }
-//              mainMenu(rl);
-//            });
-//          });
-//          break;
-//        case 4:
-//          rl.question("What account (index) to use?\n", async (index) => {
-//            await displayTokenBalance(index);
-//            rl.question("Bet how many times?\n", async (amount) => {
-//              try {
-//                await bet(index, amount);
-//                await displayTokenBalance(index);
-//              } catch (error) {
-//                console.log("error\n");
-//                console.log({ error });
-//              }
-//              mainMenu(rl);
-//            });
-//          });
-//          break;
-//        case 5:
-//          try {
-//            await closeLottery();
-//          } catch (error) {
-//            console.log("error\n");
-//            console.log({ error });
-//          }
-//          mainMenu(rl);
-//          break;
-//        case 6:
-//          rl.question("What account (index) to use?\n", async (index) => {
-//            const prize = await displayPrize(index);
-//            if (Number(prize) > 0) {
-//              rl.question(
-//                "Do you want to claim your prize? [Y/N]\n",
-//                async (answer) => {
-//                  if (answer.toLowerCase() === "y") {
-//                    try {
-//                      await claimPrize(index, prize);
-//                    } catch (error) {
-//                      console.log("error\n");
-//                      console.log({ error });
-//                    }
-//                  }
-//                  mainMenu(rl);
-//                }
-//              );
-//            } else {
-//              mainMenu(rl);
-//            }
-//          });
-//          break;
-//        case 7:
-//          await displayTokenBalance("0");
-//          await displayOwnerPool();
-//          rl.question("Withdraw how many tokens?\n", async (amount) => {
-//            try {
-//              await withdrawTokens(amount);
-//            } catch (error) {
-//              console.log("error\n");
-//              console.log({ error });
-//            }
-//            mainMenu(rl);
-//          });
-//          break;
-//        case 8:
-//          rl.question("What account (index) to use?\n", async (index) => {
-//            await displayTokenBalance(index);
-//            rl.question("Burn how many tokens?\n", async (amount) => {
-//              try {
-//                await burnTokens(index, amount);
-//                await displayBalance(index);
-//                await displayTokenBalance(index);
-//              } catch (error) {
-//                console.log("error\n");
-//                console.log({ error });
-//              }
-//              mainMenu(rl);
-//            });
-//          });
-//          break;
+        case 5:
+          rl.question("What account (index) to use? (owner only)\n", async (index) => {
+            await openVoting(index);
+            mainMenu(rl);
+          });
+          break;
+        case 6:
+          rl.question("What account (index) to use? (owner only)\n", async (index) => {
+            await closeVoting(index);
+            mainMenu(rl);
+          });
+          break;
+        case 7:
+          rl.question("What account (index) to use? (owner only)\n", async (index) => {
+            await checkVotes(index);
+            mainMenu(rl);
+          });
+          break;
+        case 8:
+          rl.question("What account (index) to vote from?\n", async (index) => {
+            rl.question("vote for what SongId?\n", async (songId) => {
+              rl.question("how many Vote tokens?\n", async (amount) => {
+                try {
+                  await vote4Song(index, songId, amount); 
+                } catch (error) {
+                  console.log("error\n");
+                  console.log({ error });
+                }
+                mainMenu(rl);
+              });
+            });
+          });
+          break;
         default:
           throw new Error("Invalid option");
       }
@@ -278,6 +219,7 @@ async function displaySongsBalance(index: string) {
   }
 }
 
+// Buy Vote tokens
 async function buyVoteTokens(index: string, amount: string) {
   const tx = await contract.connect(accounts[Number(index)]).purchaseVotes({
     value: ethers.utils.parseEther(amount).div(VOTES_TOKEN_RATIO),
@@ -286,6 +228,7 @@ async function buyVoteTokens(index: string, amount: string) {
   console.log(`Tokens bought (${receipt.transactionHash})\n`);
 }
 
+// Mint a song which requires a fee in vote tokens
 async function mintSong(index: string, URI: string) {
   const allowTx = await votesToken
     .connect(accounts[Number(index)])
@@ -296,89 +239,48 @@ async function mintSong(index: string, URI: string) {
   console.log(`Song Minted at (${receipt.transactionHash})\n`);
 }
 
-//async function checkState() {
-//  const state = await contract.betsOpen();
-//  console.log(`The lottery is ${state ? "open" : "closed"}\n`);
-//  if (!state) return;
-//  const currentBlock = await ethers.provider.getBlock("latest");
-//  const currentBlockDate = new Date(currentBlock.timestamp * 1000);
-//  const closingTime = await contract.betsClosingTime();
-//  const closingTimeDate = new Date(closingTime.toNumber() * 1000);
-//  console.log(
-//    `The last block was mined at ${currentBlockDate.toLocaleDateString()} : ${currentBlockDate.toLocaleTimeString()}\n`
-//  );
-//  console.log(
-//    `lottery should close at ${closingTimeDate.toLocaleDateString()} : ${closingTimeDate.toLocaleTimeString()}\n`
-//  );
-//}
-//
-//async function openBets(duration: string) {
-//  const currentBlock = await ethers.provider.getBlock("latest");
-//  const tx = await contract.openBets(currentBlock.timestamp + Number(duration));
-//  const receipt = await tx.wait();
-//  console.log(`Bets opened (${receipt.transactionHash})`);
-//}
-//
-//
-//async function bet(index: string, amount: string) {
-//  const allowTx = await token
-//    .connect(accounts[Number(index)])
-//    .approve(contract.address, ethers.constants.MaxUint256);
-//  await allowTx.wait();
-//  const tx = await contract.connect(accounts[Number(index)]).betMany(amount);
-//  const receipt = await tx.wait();
-//  console.log(`Bets placed (${receipt.transactionHash})\n`);
-//}
-//
-//async function closeLottery() {
-//  const tx = await contract.closeLottery();
-//  const receipt = await tx.wait();
-//  console.log(`Bets closed (${receipt.transactionHash})\n`);
-//}
-//
-//async function displayPrize(index: string): Promise<string> {
-//  const prizeBN = await contract.prize(accounts[Number(index)].address);
-//  const prize = ethers.utils.formatEther(prizeBN);
-//  console.log(
-//    `The account of address ${
-//      accounts[Number(index)].address
-//    } has earned a prize of ${prize} Tokens\n`
-//  );
-//  return prize;
-//}
-//
-//async function claimPrize(index: string, amount: string) {
-//  const tx = await contract
-//    .connect(accounts[Number(index)])
-//    .prizeWithdraw(ethers.utils.parseEther(amount));
-//  const receipt = await tx.wait();
-//  console.log(`Prize claimed (${receipt.transactionHash})\n`);
-//}
-//
-//async function displayOwnerPool() {
-//  const balanceBN = await contract.ownerPool();
-//  const balance = ethers.utils.formatEther(balanceBN);
-//  console.log(`The owner pool has (${balance}) Tokens \n`);
-//}
-//
-//async function withdrawTokens(amount: string) {
-//  const tx = await contract.ownerWithdraw(ethers.utils.parseEther(amount));
-//  const receipt = await tx.wait();
-//  console.log(`Withdraw confirmed (${receipt.transactionHash})\n`);
-//}
-//
-//async function burnTokens(index: string, amount: string) {
-//  const allowTx = await token
-//    .connect(accounts[Number(index)])
-//    .approve(contract.address, ethers.constants.MaxUint256);
-//  const receiptAllow = await allowTx.wait();
-//  console.log(`Allowance confirmed (${receiptAllow.transactionHash})\n`);
-//  const tx = await contract
-//    .connect(accounts[Number(index)])
-//    .returnTokens(ethers.utils.parseEther(amount));
-//  const receipt = await tx.wait();
-//  console.log(`Burn confirmed (${receipt.transactionHash})\n`);
-//}
+// Open Voting (Party is on)
+async function openVoting(index: string) {
+  const tx = await contract.connect(accounts[Number(index)]).openVoting();
+  const receipt = await tx.wait();
+  const txStatus = await contract.votesOpen();
+  console.log(`Voting got open at transaction: (${receipt.transactionHash})\n`);
+  console.log(`Voting status is ${ txStatus?"Opened":"Closed" }\n`);
+}
+
+// Close Voting (DJ must sleep...)
+async function closeVoting(index: string) {
+  const tx = await contract.connect(accounts[Number(index)]).closeVoting();
+  const receipt = await tx.wait();
+  const txStatus = await contract.votesOpen();
+  console.log(`Voting got closed at transaction: (${receipt.transactionHash})\n`);
+  console.log(`Voting status is ${ txStatus?"Opened":"Closed" }\n`);
+}
+
+// Check and account voting power
+async function checkVotes(index: string) {
+  const votingPowerBN = await contract.votingPower(accounts[Number(index)].address);
+  const votingPower = ethers.utils.formatEther(votingPowerBN);
+  console.log(
+    `The account of address ${
+      accounts[Number(index)].address
+    } has ${votingPower} Voting Power \n`
+  );
+  await displayVotesBalance(index);
+}
+
+// Vote for a Song
+async function vote4Song(index: string, songId: string, amount: string){
+  const tx = await contract.connect(accounts[Number(index)]).vote(songId, amount);
+  const receipt = await tx.wait();
+  console.log(`Voted at transaction: (${receipt.transactionHash})\n`);
+  console.log(` Voted for ${
+  songId
+  } with ${
+  amount
+  } OPV Voting Power\n`
+  );
+}
 
 main().catch((error) => {
   console.error(error);
