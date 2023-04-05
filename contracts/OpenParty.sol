@@ -8,8 +8,9 @@ import {OPVotes} from "./OPVotes.sol";
 import {OPSongs} from "./OPSongs.sol";
 
 /// @title OpenParty is a decentralized Jukebox
-/// @author David 1, David 2. Daniel.
+/// @author David E. Perez Negron Rocha,  Daniel Poreda.
 /// @notice This is the final project for the Solidity Encode Club Bootcamp
+/// @notice This code is based on weekend projects 12 and 20 from @MatheusDaros
 contract OpenParty is Ownable {
     /// @notice Address of the token used for voting
     OPVotes public votesToken;
