@@ -28,7 +28,7 @@ contract OpenParty is Ownable {
     /// @notice status of voting, open or closed. 
     bool public votesOpen;
 
-    /// @notice winning song of a vote count, its tokenId is referenced to be played next.
+    /// @notice winning song of a vote count, its songId is referenced to be played next.
     /// this can also be called to view what song is currently playing/playing next.
     uint256 public nextSong;
 
@@ -153,18 +153,19 @@ contract OpenParty is Ownable {
 
     /// @notice Sets the end of a ballot by comparing all token vote counts and assigning
     /// the winning songId to state variable nextSong.
-    function getNextSong() external onlyOwner partyOn returns (uint256 winningToken) {
+    function getNextSong() external onlyOwner partyOn returns (uint256 winningSong) {
         uint highestCount = 0;
         for (uint i = votedSongs.length ; i >= 0 ; i--) {
             uint songId = votedSongs[i];
             if (songsData[songId].voteCount >= highestCount) {
                 highestCount = songsData[songId].voteCount;
-                winningToken=songId;
+                winningSong=songId;
             }
         }
-        nextSong = winningToken;
-        songsData[winningToken].voteCount = 0;
-        return winningToken;
+
+        nextSong = winningSong;
+        songsData[winningSong].voteCount = 0;
+        return winningSong;
     }
     
     /// @notice Sets the end of a ballot by comparing all token vote counts and assigning
