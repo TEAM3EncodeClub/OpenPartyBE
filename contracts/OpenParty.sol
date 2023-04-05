@@ -32,10 +32,10 @@ contract OpenParty is Ownable {
     /// this can also be called to view what song is currently playing/playing next.
     uint256 public nextSong;
 
-    /// @notice Token Id to vote count.
-    mapping(uint256 => uint256) votesToSong;
+    /// @notice Song Id to vote count.
+    //mapping(uint256 => uint256) idVotes;
 
-    /// @notice array of token Id's voted for.
+    ///// @notice array of Song Id's voted for.
     uint256[] public votedSongs;
 
     /// @notice tracks all cast votes. Tokens are not transferred in voting. Voting power
@@ -43,14 +43,15 @@ contract OpenParty is Ownable {
     mapping(address => uint256) public votingPowerSpent;
 
     /// struct for returning ballot counts in function viewCurrentVotes()
-    struct songCount {
-        uint tokenId;
+    /// @dev Check posibility to implement at fronted
+    struct songData {
         uint voteCount;
+        bool votedSong;
     } 
-    songCount[] internal _songCount;
-
-    // TIP HOW TO CHECK IF A SONG EXIST
-    //songsToken._exists(tokenId)
+    /// @notice Song Id to vote count.
+    mapping(uint256 => songData) songsData;
+    
+    //votedSongs[] internal _votedSong;
 
     /// @notice Constructor function
     /// @param _purchaseRatio Amount of tokens given per ETH paid
@@ -64,6 +65,18 @@ contract OpenParty is Ownable {
         purchaseRatio = _purchaseRatio;
         // sets a songFee to be paid in vote tokens
         songFee = _songFee ;
+    }
+
+    /// @notice Passes when the party is over / there is no party / no voting 
+    modifier partyOff() {
+        require(!votesOpen, "Party is ON, go vote!");
+        _;
+    }
+
+    /// @notice Passes when the the party is on / voting is open.
+    modifier partyOn() {
+        require(votesOpen, "Party's over, go home.");
+        _;
     }
 
     /// @notice Gives votes tokens based on the amount of ETH sent.
@@ -87,6 +100,7 @@ contract OpenParty is Ownable {
     }
 
     /// @notice Burns `amount` vote tokens and give the equivalent ETH back to user
+    /// @dev Not being Used for now
     function returnVotes(uint256 _amount) external {
         votesToken.burnFrom(msg.sender, _amount);
         payable(msg.sender).transfer(_amount / purchaseRatio);
@@ -94,6 +108,7 @@ contract OpenParty is Ownable {
 
     /// @notice Burns a song token Usually if there are copyright Issues
     /// @param _tokenId of the Song to be burned
+    /// @dev Not being Used for now
     /// @dev future version might require a verification process approved by a DAO
     function burnSong(uint256 _tokenId) external onlyOwner {
         songsToken.burn(_tokenId);
@@ -106,18 +121,6 @@ contract OpenParty is Ownable {
         songFee =  _songFee;
     }
 
-    /// @notice Passes when the party is over / there is no party / no voting 
-    modifier partyOff() {
-        require(!votesOpen, "Party is ON, go vote!");
-        _;
-    }
-
-    /// @notice Passes when the the party is on / voting is open.
-    modifier partyOn() {
-        require(votesOpen, "Party's over, go home.");
-        _;
-    }
-
     /// @dev bool true for 1. voting function requirement, 2. Begin new ballot with
     /// verification that the array of songs voted for is empty. 
     function openVoting() external onlyOwner partyOff{
@@ -127,21 +130,21 @@ contract OpenParty is Ownable {
         }
     }    
 
-    /// @dev votesToSong mapping records the vote count. 
+    /// @dev songsData mapping records the vote count. 
     /// Array votedSongs records the token Id of any song voted for. This array 
-    /// will be looped at the ballot closing to reference token vote counts in votesToSong.
+    /// will be looped at the ballot closing to reference token vote counts in songsData.
     /// Users will cast amount of votes by token Id from the frontend
-    function vote(uint songToken, uint256 amount) external partyOn{
-        require(songsToken.checkSongExists(songToken));
+    function vote(uint songId, uint256 amount) external partyOn{
+        require(songsToken.checkSongExists(songId));
         require(votingPower(msg.sender) >= amount, "You have insufficient voting power");
         votingPowerSpent[msg.sender] += amount;
 
-        if (votesToSong[songToken] == 0) {
-            votesToSong[songToken] += amount;
-            votedSongs.push(songToken);
+        if (!songsData[songId].votedSong) {
+                songsData[songId].votedSong = true;
+                votedSongs.push(songId);
+            }
+         songsData[songId].voteCount += amount;
         }
-        else {votesToSong[songToken] += amount;}
-    }
 
     /// @notice Check user 'account's voting power by checking current vote supply against votes cast.
     function votingPower(address account) public view returns (uint256) {
@@ -156,12 +159,12 @@ contract OpenParty is Ownable {
         uint winningToken;
         for (uint i = 0; i < votedSongs.length; i++) {
             uint song = votedSongs[i];
-            if (votesToSong[song] > highestCount) {
-                highestCount = votesToSong[song];
+            if (songsData[song].voteCount > highestCount) {
+                highestCount = songsData[song].voteCount;
                 if (Winners.length >= 1) delete Winners;
                 Winners.push(song);
             }
-            else if (votesToSong[song] == highestCount) {
+            else if (songsData[song].voteCount == highestCount) {
                 Winners.push(song);
             }
         }
@@ -178,7 +181,7 @@ contract OpenParty is Ownable {
         // the winning token's vote count is cleared, but all other songs carry vote counts to the next tally.
         delete Winners;
         nextSong = winningToken;
-        votesToSong[winningToken] = 0;
+        songsData[winningToken].voteCount = 0;
         return winningToken; 
     }
 
@@ -188,14 +191,15 @@ contract OpenParty is Ownable {
         // and allow refresh at partyOff. ?
     }
 
-    function viewCurrentVotes() external partyOn returns (songCount[] memory) {
-        for (uint i = 0; i < votedSongs.length; i++){
-            uint _tokenId = votedSongs[i];
-            uint _voteCount = votesToSong[_tokenId];
-            _songCount.push(songCount(_tokenId, _voteCount));
-        }
-        return _songCount;
-    }
+    // To Review
+    //function viewCurrentVotes() external partyOn returns (songCount[] memory) {
+    //    for (uint i = 0; i < votedSongs.length; i++){
+    //        uint _tokenId = votedSongs[i];
+    //        uint _voteCount = songsData[_tokenId].voteCount;
+    //        _songCount.push(songCount(_tokenId, _voteCount));
+    //    }
+    //    return _songCount;
+    //}
 
     /// @notice Upon ending the party and closing votes, all vote counts are cleared,
     /// and votedSongs array is cleared, so nothing carries over to the next party ballot.
@@ -203,7 +207,7 @@ contract OpenParty is Ownable {
         votesOpen = false;
         for (uint i = 0; i < votedSongs.length; i++){
             uint song = votedSongs[i];
-            votesToSong[song] = 0;
+            songsData[song].voteCount = 0;
         }
         delete votedSongs;
     }
