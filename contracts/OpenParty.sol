@@ -125,21 +125,22 @@ contract OpenParty is Ownable {
         if (votedSongs.length > 0) {
             delete votedSongs;
         }
-    }
-    
+    }    
+
     /// @dev votesToSong mapping records the vote count. 
     /// Array votedSongs records the token Id of any song voted for. This array 
     /// will be looped at the ballot closing to reference token vote counts in votesToSong.
     /// Users will cast amount of votes by token Id from the frontend
     function vote(uint songToken, uint256 amount) external partyOn{
-       require(votingPower(msg.sender) >= amount, "You have insufficient voting power");
-       votingPowerSpent[msg.sender] += amount;
+        require(songsToken.checkSongExists(songToken));
+        require(votingPower(msg.sender) >= amount, "You have insufficient voting power");
+        votingPowerSpent[msg.sender] += amount;
 
-       if (votesToSong[songToken] == 0) {
-           votesToSong[songToken] += amount;
-           votedSongs.push(songToken);
-       }
-       else {votesToSong[songToken] += amount;}
+        if (votesToSong[songToken] == 0) {
+            votesToSong[songToken] += amount;
+            votedSongs.push(songToken);
+        }
+        else {votesToSong[songToken] += amount;}
     }
 
     /// @notice Check user 'account's voting power by checking current vote supply against votes cast.
