@@ -15,6 +15,7 @@ const VOTES_TOKEN_RATIO = 1000000;
 async function main() {
   await initContracts();
   await initAccounts();
+  await topUpAccounts();
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -43,13 +44,31 @@ async function initAccounts() {
   accounts = await ethers.getSigners();
 }
 
+async function topUpAccounts(){
+  const Songs: string[] = [
+    "bafybeidb3emtxhhsbriksv5qywtw4rh6uie7dzh7qaj25fruw5gx3fir6y",
+    "bafybeihxgoyvfnpqvnc2fiffa3ab22jjlnrv7bgtjoryotzc7znylrkk4m",
+    "bafybeifgoud5o33ckk54hfthanzazavhudittzq26h3ozezmq6zidej7au",
+    "bafybeib2kh7iuziuhhocxre4qfi2q5zje7qafadeu6dybb4tnhylnft454",
+    "bafybeiatvogo2vwu7qkvyj4tadx4nzh7z7zeca2lvvjjqjtarbtk7rqdoi",
+    "bafybeif4mq3ve4cq5frxj4sfqugupshl37ufzm2uaty3whmews3s7curg4",
+    "bafybeibjq4kdgwgql7whhwsqlpnla4dvjim6zy37pcpt4z4gdyvmcppk7m",
+    "bafybeidlrnqdjfg7kta24azusk2mxwb7bxpnswfuifdthbqbnuwv7tmlly",
+  ] ;
+
+  for(let i = 1; i < 9; i++){
+    buyVoteTokens(i.toString(), "10000000");
+    mintSong(i.toString(), Songs[i-1])
+  } 
+}
+
 async function mainMenu(rl: readline.Interface) {
   menuOptions(rl);
 }
 
 function menuOptions(rl: readline.Interface) {
   rl.question(
-    "Select operation: \n Options: \n [0]: Exit \n [1]: Display Wallet Balances \n [2]: Buy Vote Tokens \n [3]: Mint A Song \n Option:",
+    "Select operation: \n Options: \n [0]: Exit \n [1]: PrintMenu  \n [2]: Display Wallet Balances \n [3]: Buy Vote Tokens \n [4]: Mint A Song \n Option:",
     // Just in case: IPFS integration of Option 3 - upload songs, put their hashes and premit to some addeses this songs
     // VoteNextSong: set a blocktimestap when it finishes and count votes, select the winner 
     // Diplay Song: Request all the SongID (NFT TokenID) and display with their data 
@@ -64,6 +83,9 @@ function menuOptions(rl: readline.Interface) {
           rl.close();
           return;
         case 1:
+            mainMenu(rl);
+          return;
+        case 2:
           rl.question("What account (index) to use?\n", async (index) => {
             await displayBalance(index);
             await displayVotesBalance(index);
@@ -71,7 +93,7 @@ function menuOptions(rl: readline.Interface) {
             mainMenu(rl);
           });
           break;
-        case 2:
+        case 3:
           rl.question("What account (index) to use?\n", async (index) => {
             await displayBalance(index);
             await displayVotesBalance(index);
@@ -90,7 +112,7 @@ function menuOptions(rl: readline.Interface) {
             });
           });
           break;
-        case 3:
+        case 4:
           rl.question("What account (index) to use?\n", async (index) => {
             await displayBalance(index);
             await displayVotesBalance(index);
