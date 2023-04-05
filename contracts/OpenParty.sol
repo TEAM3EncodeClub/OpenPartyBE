@@ -150,40 +150,56 @@ contract OpenParty is Ownable {
     function votingPower(address account) public view returns (uint256) {
         return votesToken.getVotes(account) - votingPowerSpent[account];
     }
+
+    /// @notice Sets the end of a ballot by comparing all token vote counts and assigning
+    /// the winning songId to state variable nextSong.
+    function getNextSong() external onlyOwner partyOn returns (uint256 winningToken) {
+        uint highestCount = 0;
+        for (uint i = votedSongs.length ; i >= 0 ; i--) {
+            uint songId = votedSongs[i];
+            if (songsData[songId].voteCount >= highestCount) {
+                highestCount = songsData[songId].voteCount;
+                winningToken=songId;
+            }
+        }
+        nextSong = winningToken;
+        songsData[winningToken].voteCount = 0;
+        return winningToken;
+    }
     
     /// @notice Sets the end of a ballot by comparing all token vote counts and assigning
     /// the winning tokenId to state variable nextSong.
-    uint[] private Winners;
-    function getNextSong() external partyOn returns (uint256) {
-        uint highestCount = 0;
-        uint winningToken;
-        for (uint i = 0; i < votedSongs.length; i++) {
-            uint song = votedSongs[i];
-            if (songsData[song].voteCount > highestCount) {
-                highestCount = songsData[song].voteCount;
-                if (Winners.length >= 1) delete Winners;
-                Winners.push(song);
-            }
-            else if (songsData[song].voteCount == highestCount) {
-                Winners.push(song);
-            }
-        }
+    //uint[] private Winners;
+    //function getNextSong() external partyOn returns (uint256) {
+    //    uint highestCount = 0;
+    //    uint winningToken;
+    //    for (uint i = 0; i < votedSongs.length; i++) {
+    //        uint song = votedSongs[i];
+    //        if (songsData[song].voteCount > highestCount) {
+    //            highestCount = songsData[song].voteCount;
+    //            if (Winners.length >= 1) delete Winners;
+    //            Winners.push(song);
+    //        }
+    //        else if (songsData[song].voteCount == highestCount) {
+    //            Winners.push(song);
+    //        }
+    //    }
 
-        winningToken = Winners[0];
-        // if there is a tie, winner will be determined by lowest token Id.
-        if (Winners.length > 1) {
-            for (uint i = 1; i < Winners.length; i++) {
-                if (Winners[i] < winningToken) {
-                    winningToken = Winners[i];
-                }
-            }
-        }
-        // the winning token's vote count is cleared, but all other songs carry vote counts to the next tally.
-        delete Winners;
-        nextSong = winningToken;
-        songsData[winningToken].voteCount = 0;
-        return winningToken; 
-    }
+    //    winningToken = Winners[0];
+    //    // if there is a tie, winner will be determined by lowest token Id.
+    //    if (Winners.length > 1) {
+    //        for (uint i = 1; i < Winners.length; i++) {
+    //            if (Winners[i] < winningToken) {
+    //                winningToken = Winners[i];
+    //            }
+    //        }
+    //    }
+    //    // the winning token's vote count is cleared, but all other songs carry vote counts to the next tally.
+    //    delete Winners;
+    //    nextSong = winningToken;
+    //    songsData[winningToken].voteCount = 0;
+    //    return winningToken; 
+    //}
 
     function refreshVotes() external {
         // TODO: should we have this function available while PartyOn? 
