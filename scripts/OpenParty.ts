@@ -144,7 +144,7 @@ function menuOptions(rl: readline.Interface) {
           });
           break;
         case 7:
-          rl.question("What account (index) to use? (owner only)\n", async (index) => {
+          rl.question("What account (index) to use? \n", async (index) => {
             await checkVotes(index);
             mainMenu(rl);
           });
@@ -239,13 +239,22 @@ async function mintSong(index: string, URI: string) {
   console.log(`Song Minted at (${receipt.transactionHash})\n`);
 }
 
+// get lastest block for opening voting
+async function getLatestBlock(): Promise<string> {
+  const lastestBlock = await ethers.provider.getBlockNumber() 
+  return  lastestBlock.toString()
+}
+
 // Open Voting (Party is on)
 async function openVoting(index: string) {
-  const tx = await contract.connect(accounts[Number(index)]).openVoting();
-  const receipt = await tx.wait();
-  const txStatus = await contract.votesOpen();
-  console.log(`Voting got open at transaction: (${receipt.transactionHash})\n`);
-  console.log(`Voting status is ${ txStatus?"Opened":"Closed" }\n`);
+  const tx = getLatestBlock().then((blockNumber: string) => {
+    contract.connect(accounts[Number(index)]).openVoting(blockNumber);
+    console.log(`The latest block number is ${blockNumber}`);
+  })  .catch((error: Error) => {
+    console.error(`An error occurred: ${error.message}`);
+  });
+    const txStatus = await contract.votesOpen();
+    console.log(`Voting status is ${ txStatus?"Opened":"Closed" }\n`);
 }
 
 // Close Voting (DJ must sleep...)

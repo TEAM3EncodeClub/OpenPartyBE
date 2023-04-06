@@ -32,8 +32,8 @@ contract OpenParty is Ownable {
     /// this can also be called to view what song is currently playing/playing next.
     uint256 public nextSong;
 
-    /// @notice Song Id to vote count.
-    //mapping(uint256 => uint256) idVotes;
+    /// @notice targerBlockNumber for selecting a winner.
+    uint256 targetBlockNumber;
 
     ///// @notice array of Song Id's voted for.
     uint256[] public votedSongs;
@@ -123,8 +123,9 @@ contract OpenParty is Ownable {
 
     /// @dev bool true for 1. voting function requirement, 2. Begin new ballot with
     /// verification that the array of songs voted for is empty. 
-    function openVoting() external onlyOwner partyOff{
+    function openVoting( uint256 _targetBlockNumber ) external onlyOwner partyOff{
         votesOpen = true;
+        targetBlockNumber = _targetBlockNumber;
         if (votedSongs.length > 0) {
             delete votedSongs;
         }
@@ -148,7 +149,7 @@ contract OpenParty is Ownable {
 
     /// @notice Check user 'account's voting power by checking current vote supply against votes cast.
     function votingPower(address account) public view returns (uint256) {
-        return votesToken.getVotes(account) - votingPowerSpent[account];
+        return votesToken.getPastVotes(account, targetBlockNumber) - votingPowerSpent[account];
     }
 
     /// @notice Sets the end of a ballot by comparing all token vote counts and assigning
@@ -227,6 +228,7 @@ contract OpenParty is Ownable {
             songsData[song].voteCount = 0;
         }
         delete votedSongs;
+        delete targetBlockNumber;
     }
     
 }
