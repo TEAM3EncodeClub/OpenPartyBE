@@ -309,12 +309,6 @@ async  function getWinnerSong(index: string,){
   console.log(getWinner)
   const getNextSong = await contract.getNextSong();
   console.log(`Winner song has id (${getNextSong})\n`);
-  //console.log(` Winner is  ${
-  //songId
-  //} with ${
-  //amount
-  //} OPV Voting Power\n`
-  //);
 }
 
 //async function showVotedSongs(){

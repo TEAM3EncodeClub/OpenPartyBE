@@ -42,7 +42,7 @@ contract OpenParty is Ownable {
     /// struct for returning ballot counts in function viewCurrentVotes()
     /// @dev Check posibility to implement at fronted
     struct songData {
-        uint voteCount;
+        uint256 voteCount;
         bool votedSong;
     } 
     /// @notice Song Id to vote count.
@@ -119,18 +119,17 @@ contract OpenParty is Ownable {
     /// verification that the array of songs voted for is empty. 
     function openVoting() external onlyOwner partyOff{
         votesOpen = true;
-        if (votedSongs.length > 0) {
-            delete votedSongs;
-        }
+        votedSongs = new uint256[](0);
     }    
 
     /// @dev songsData mapping records the vote count. 
     /// Array votedSongs records the token Id of any song voted for. This array 
     /// will be looped at the ballot closing to reference token vote counts in songsData.
     /// Users will cast amount of votes by token Id from the frontend
-    function vote(uint songId, uint256 amount) external partyOn{
+    function vote(uint256 songId, uint256 amount) external partyOn{
         require(songsToken.checkSongExists(songId));
         require(votingPower(msg.sender) >= amount, "You have insufficient voting power");
+
         votingPowerSpent[msg.sender] += amount;
 
         if (!songsData[songId].votedSong) {
@@ -145,27 +144,25 @@ contract OpenParty is Ownable {
         return votesToken.getVotes(account) - votingPowerSpent[account];
     }
 
-    function countVotedSongs() public view returns(uint count) {
-        return votedSongs.length;
-    }
-
     /// @notice Sets the end of a ballot by comparing all token vote counts and assigning
     /// the winning songId to state variable nextSong.
     function getNextSong() external onlyOwner partyOn returns (uint256 winningSong) {
-        uint highestCount = 0;
-        uint songId = 0;
-        for (uint i = countVotedSongs(); i > 1 ; i--) {
-            songId = votedSongs[i];
-            if (songsData[songId].voteCount > highestCount) {
-                highestCount = songsData[songId].voteCount;
-                winningSong=songId;
-            }
+    require(votedSongs.length > 0, "There are no voted songs");
+    uint256 highestCount = 0;
+    uint256 songId = 0;
+    for (uint i = votedSongs.length - 1; i >= 0 ; i--) {
+        songId = votedSongs[i];
+        if (songsData[songId].voteCount >= highestCount) {
+          highestCount = songsData[songId].voteCount;
+          winningSong = songId;
         }
-
-        nextSong = winningSong;
-        songsData[winningSong].voteCount = 0;
-        return winningSong;
     }
+
+
+    nextSong = winningSong;
+    songsData[winningSong].voteCount = 0;
+    return winningSong;
+}
     
 
     function refreshVotes() external {
