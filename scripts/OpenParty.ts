@@ -8,7 +8,6 @@ let votesToken: OPVotes;
 let songsToken: OPSongs;
 let accounts: SignerWithAddress[];
 
-
 const SONG_FEE = 1000 // 1 %
 const VOTES_TOKEN_RATIO = 1000000;
 
@@ -219,6 +218,14 @@ async function displaySongsBalance(index: string) {
   }
 }
 
+// Delegate Vote Tokens
+async function delegateVotes(index: string, address: string){
+  const txDelegate = await  votesToken.connect(accounts[Number(index)]).delegate(address);
+  const receiptDelegate = await txDelegate.wait();
+  console.log(`Tokens delegated (${receiptDelegate.transactionHash})\n`);
+}
+
+
 // Buy Vote tokens
 async function buyVoteTokens(index: string, amount: string) {
   const tx = await contract.connect(accounts[Number(index)]).purchaseVotes({
@@ -226,6 +233,8 @@ async function buyVoteTokens(index: string, amount: string) {
   });
   const receipt = await tx.wait();
   console.log(`Tokens bought (${receipt.transactionHash})\n`);
+  // self delegate after buying
+  await delegateVotes(index, accounts[Number(index)].address);
 }
 
 // Mint a song which requires a fee in vote tokens

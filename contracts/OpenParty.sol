@@ -32,9 +32,6 @@ contract OpenParty is Ownable {
     /// this can also be called to view what song is currently playing/playing next.
     uint256 public nextSong;
 
-    /// @notice Song Id to vote count.
-    //mapping(uint256 => uint256) idVotes;
-
     ///// @notice array of Song Id's voted for.
     uint256[] public votedSongs;
 
@@ -51,8 +48,6 @@ contract OpenParty is Ownable {
     /// @notice Song Id to vote count.
     mapping(uint256 => songData) songsData;
     
-    //votedSongs[] internal _votedSong;
-
     /// @notice Constructor function
     /// @param _purchaseRatio Amount of tokens given per ETH paid
     /// @param _songFee Amount of tokens required for placing a bet that goes for the prize pool
@@ -85,7 +80,6 @@ contract OpenParty is Ownable {
     /// @dev This implementation is prone to rounding problems
     function purchaseVotes() external payable {
        votesToken.mint(msg.sender, msg.value * purchaseRatio);
-       votesToken.delegate(msg.sender);
     }
 
     /// @notice Mints Song tokens based charging a fee in voteTokens to avoid Spam
@@ -168,55 +162,12 @@ contract OpenParty is Ownable {
         return winningSong;
     }
     
-    /// @notice Sets the end of a ballot by comparing all token vote counts and assigning
-    /// the winning tokenId to state variable nextSong.
-    //uint[] private Winners;
-    //function getNextSong() external partyOn returns (uint256) {
-    //    uint highestCount = 0;
-    //    uint winningToken;
-    //    for (uint i = 0; i < votedSongs.length; i++) {
-    //        uint song = votedSongs[i];
-    //        if (songsData[song].voteCount > highestCount) {
-    //            highestCount = songsData[song].voteCount;
-    //            if (Winners.length >= 1) delete Winners;
-    //            Winners.push(song);
-    //        }
-    //        else if (songsData[song].voteCount == highestCount) {
-    //            Winners.push(song);
-    //        }
-    //    }
-
-    //    winningToken = Winners[0];
-    //    // if there is a tie, winner will be determined by lowest token Id.
-    //    if (Winners.length > 1) {
-    //        for (uint i = 1; i < Winners.length; i++) {
-    //            if (Winners[i] < winningToken) {
-    //                winningToken = Winners[i];
-    //            }
-    //        }
-    //    }
-    //    // the winning token's vote count is cleared, but all other songs carry vote counts to the next tally.
-    //    delete Winners;
-    //    nextSong = winningToken;
-    //    songsData[winningToken].voteCount = 0;
-    //    return winningToken; 
-    //}
 
     function refreshVotes() external {
         // TODO: should we have this function available while PartyOn? 
         // perhaps users should buy more tokens for more votes during the party,
         // and allow refresh at partyOff. ?
     }
-
-    // To Review
-    //function viewCurrentVotes() external partyOn returns (songCount[] memory) {
-    //    for (uint i = 0; i < votedSongs.length; i++){
-    //        uint _tokenId = votedSongs[i];
-    //        uint _voteCount = songsData[_tokenId].voteCount;
-    //        _songCount.push(songCount(_tokenId, _voteCount));
-    //    }
-    //    return _songCount;
-    //}
 
     /// @notice Upon ending the party and closing votes, all vote counts are cleared,
     /// and votedSongs array is cleared, so nothing carries over to the next party ballot.
