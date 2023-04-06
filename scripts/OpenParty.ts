@@ -67,7 +67,7 @@ async function mainMenu(rl: readline.Interface) {
 
 function menuOptions(rl: readline.Interface) {
   rl.question(
-    "Select operation: \n Options: \n [0]: Exit \n [1]: PrintMenu  \n [2]: Display Wallet Balances \n [3]: Buy Vote Tokens \n [4]: Mint A Song \n [5]: OpenVoting \n [6]: CloseVoting \n [7]: Check Voting Power \n [8]: Vote For Song \n [9]: Get Winning Song \n [10]: Change Song Fee \n Option:",
+    "Select operation: \n Options: \n [0]: Exit \n [1]: PrintMenu  \n [2]: Display Wallet Balances \n [3]: Buy Vote Tokens \n [4]: Mint A Song \n [5]: OpenVoting \n [6]: CloseVoting \n [7]: Check Voting Power \n [8]: Vote For Song \n [9]: Get Winning Song \n [10]: Show Voted Songs \n [11]: Change Song Fee \n Option:",
     // Just in case: IPFS integration of Option 3 - upload songs, put their hashes and premit to some addeses this songs
     // VoteNextSong: set a blocktimestap when it finishes and count votes, select the winner 
     // Diplay Song: Request all the SongID (NFT TokenID) and display with their data 
@@ -162,6 +162,16 @@ function menuOptions(rl: readline.Interface) {
               });
             });
           });
+          break;
+        case 9:
+          rl.question("What account (index) to use? (owner only)\n", async (index) => {
+            await getWinnerSong(index);
+            mainMenu(rl);
+          });
+          break;
+        case 10:
+          await showVotedSongs();
+          mainMenu(rl);
           break;
         default:
           throw new Error("Invalid option");
@@ -290,6 +300,31 @@ async function vote4Song(index: string, songId: string, amount: string){
   } OPV Voting Power\n`
   );
 }
+
+// Get Winner Song onlyOnwer and partyIsOn
+async  function getWinnerSong(index: string,){
+  const getWinner = await contract.connect(accounts[Number(index)]).getNextSong();
+  const receipt = await getWinner.wait();
+  console.log(`Winner Requested at : (${receipt.transactionHash})\n`);
+  console.log(getWinner)
+  const getNextSong = await contract.getNextSong();
+  console.log(`Winner song has id (${getNextSong})\n`);
+  //console.log(` Winner is  ${
+  //songId
+  //} with ${
+  //amount
+  //} OPV Voting Power\n`
+  //);
+}
+
+//async function showVotedSongs(){
+//  const arrayLength : ethers.BigNumber = await contract.callStatic.votedSongs.length();
+//  const promises = Array.from({ length: arrayLength }, (_, i) => contract.callStatic.votedSongs(i));
+//  const votedSongs: ethers.BigNumber[] = await Promise.all(promises);
+//  votedSongs.forEach((songID) => {
+//    console.log(`Voted song ID: ${songID.toString()}`);
+//    }
+//};
 
 main().catch((error) => {
   console.error(error);

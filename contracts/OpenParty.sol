@@ -145,13 +145,18 @@ contract OpenParty is Ownable {
         return votesToken.getVotes(account) - votingPowerSpent[account];
     }
 
+    function countVotedSongs() public view returns(uint count) {
+        return votedSongs.length;
+    }
+
     /// @notice Sets the end of a ballot by comparing all token vote counts and assigning
     /// the winning songId to state variable nextSong.
     function getNextSong() external onlyOwner partyOn returns (uint256 winningSong) {
         uint highestCount = 0;
-        for (uint i = votedSongs.length ; i >= 0 ; i--) {
-            uint songId = votedSongs[i];
-            if (songsData[songId].voteCount >= highestCount) {
+        uint songId = 0;
+        for (uint i = countVotedSongs(); i > 1 ; i--) {
+            songId = votedSongs[i];
+            if (songsData[songId].voteCount > highestCount) {
                 highestCount = songsData[songId].voteCount;
                 winningSong=songId;
             }
